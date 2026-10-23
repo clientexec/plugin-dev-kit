@@ -115,7 +115,7 @@ Gateway settings are read with **spaces kept** in the key (unlike server plugins
 
 Use plain, untranslated setting names (conventions, section 3).
 
-Don't use `encryptable` on gateway settings: it has no effect for gateways. Use the `password` type for secrets so they're masked in the admin UI.
+Don't use `encryptable` on gateway settings: it's only honored for server plugins (conventions, section 3), so gateway secrets are stored as entered. Use the `password` type so they're masked in the admin UI.
 
 ### Settings core reads
 

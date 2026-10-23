@@ -567,7 +567,9 @@ public function usage($userPackage, $view): string
 }
 ```
 
-The controller verifies ownership before calling, but `enhance` checks again in the plugin, and that's worth copying: it costs one comparison and protects you if the method is ever reached another way.
+Before calling a panel method, the controller checks that the package belongs to the logged-in client, is active, uses your plugin, and that the key is declared in `publicPanels` and exists as a method. `enhance` checks ownership again in the plugin anyway, which is worth copying: it costs one comparison and protects you if the method is ever reached another way.
+
+If a panel method throws, the client is redirected to the package page with the exception's message, so keep internal details (hostnames, raw API errors) out of messages thrown from panel methods.
 
 ### Panel actions (AJAX)
 
@@ -588,9 +590,17 @@ $.ajax({
 
 Put the routing keys (`id`, `panel`, `do`) last in `$.extend()` so form data can never override them. The session hash is added by Clientexec's global AJAX setup.
 
-Only methods listed under that panel in `publicPanelActions` are callable. Actions triggered from `getPublicView()` output use `'publicView'` as the panel key.
+Before calling the method, the controller requires:
 
-The action method receives the package and the request data and returns an array:
+- a `POST` request;
+- `panel` and `do` matching `^[a-z][a-z0-9_]{0,64}$` (case insensitive);
+- a package that belongs to the logged-in client, is active, and uses your plugin;
+- `panel` declared in `publicPanels`, or `panel` equal to `'publicView'` with `publicView` enabled;
+- `do` listed under that panel in `publicPanelActions`, and existing as a method.
+
+Anything else is rejected with "Invalid action" and logged.
+
+The action method receives the package and `$_POST`, and returns an array:
 
 ```php
 public function refreshUsage(UserPackage $userPackage, array $request): array
@@ -600,7 +610,9 @@ public function refreshUsage(UserPackage $userPackage, array $request): array
 }
 ```
 
-Return `['message' => ...]` for a notice. To hand back data such as a URL to open, return `['data' => ['url' => $url]]`; `cpanel`'s panel JavaScript reads it as `response.url`. Throw `CE_Exception` for errors.
+Return `['message' => ...]` for a notice. Anything under `data` is merged into the top level of the JSON response, so `['data' => ['url' => $url]]` arrives in JavaScript as `response.url`.
+
+Throw `CE_Exception` for errors the client should see: its message is returned as the error. Any other exception is logged and the client gets a generic "An error occurred while processing your request." Since API clients usually throw `CE_Exception` with the raw error, catch those in panel actions and rethrow a message written for the client, logging the original with `CE_Lib::log()`.
 
 Because the request comes from the client, treat every value in `$request` as hostile. Validate formats, and confirm that anything named in the request (a mailbox, a database, an FTP login) belongs to this package's account before acting on it. `cpanel`'s `assertOwnsMailbox()` and `assertDatabaseExists()` show the pattern. This matters most when the remote API call runs with root or reseller credentials and isn't scoped to the account on its own.
 

@@ -115,11 +115,15 @@ These are the `type` values in use across shipped plugins:
 | `label` | static text | |
 | `fieldset` | groups the fields that follow | `cpanel` uses it for reseller fields |
 
-Other keys a setting can carry: `description` (help text, may contain simple HTML), `value` (default), `encryptable` (store encrypted), `label` (used on nested fields), and `helpid` (used by service plugins).
+Other keys a setting can carry: `description` (help text, may contain simple HTML), `value` (default), `encryptable` (store encrypted; server plugins only, see below), `label` (used on nested fields), and `helpid` (used by service plugins).
 
 ### Secrets
 
-In server plugins, mark every credential `'encryptable' => true`. Clientexec encrypts it at rest and hands it to your plugin already decrypted. Gateway plugins have their own rule; see the gateway reference. If you need to store a secret yourself somewhere else (a custom field, your own table), encrypt it with `Clientexec::encryptString()` and decrypt with `Clientexec::decryptString()`. Never write a secret to a log or an error email: unset it from the array first (see section 5).
+`'encryptable' => true` is only honored for **server plugins**. Per-server settings are saved by the servers controller and read back by the `Server` model, and those are the only code paths that check the flag. Even there it only takes effect when the global **Domain Passwords are Encrypted** setting is on; when that setting is toggled, core re-encrypts or decrypts every encryptable server setting.
+
+For every other plugin type (gateways, registrars, captcha, snapins, services), the flag is ignored and the value is stored as entered. A few shipped captcha and registrar plugins declare it anyway; it has no effect there. Use the `password` type so secrets are at least masked in the admin UI.
+
+In server plugins, mark every credential `'encryptable' => true`. Your plugin always receives the value decrypted. If you need to store a secret yourself somewhere else (a custom field, your own table), encrypt it with `Clientexec::encryptString()` and decrypt with `Clientexec::decryptString()`. Never write a secret to a log or an error email: unset it from the array first (see section 5).
 
 ## 4. Errors
 

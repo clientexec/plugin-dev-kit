@@ -19,23 +19,28 @@ clientexec-extension-dev-kit/
     ├── server/
     │   ├── create.md                # author a new server (provisioning) plugin, with a complete example
     │   └── convert-from-whmcs.md    # port a WHMCS provisioning module to a Clientexec server plugin
-    └── gateways/
-        ├── create.md                # author a new payment gateway, with a complete offsite example
-        └── convert-from-whmcs.md    # port a WHMCS payment gateway module to a Clientexec gateway
+    ├── gateways/
+    │   ├── create.md                # author a new payment gateway, with a complete offsite example
+    │   └── convert-from-whmcs.md    # port a WHMCS payment gateway module to a Clientexec gateway
+    └── registrars/
+        ├── create.md                # author a new registrar plugin, with a complete example
+        └── convert-from-whmcs.md    # port a WHMCS registrar module to a Clientexec registrar
 ```
 
 ## Scope today
 
 - **Server plugins:** full method surface of `ServerPlugin`, the `$args` structure, settings and per-package fields, actions and client actions, single sign-on, client area views and panels, resellers, a complete example plugin, and a WHMCS porting guide.
 - **Payment gateways:** offline, offsite, onsite form, and stored payment method gateways; the full `$params` set, return contract, the `Plugin` result recorder, callbacks, settings core reads, payment verification rules, a complete offsite example with a webhook, and a WHMCS porting guide.
+- **Registrars:** every method core calls, with the exact `$params` and return shapes core expects; domain search and name suggest, register/renew/transfer, nameservers, DNS, contacts, lock, domain and price import, automatic renewal, and a complete example.
 - **Shared conventions:** the rules every plugin type follows.
 
-Planned: registrar plugins, snapins, service (cron) plugins, fraud, captcha, import/export, and an "updating older plugins" guide.
+Planned: snapins, service (cron) plugins, fraud, captcha, import/export, and an "updating older plugins" guide.
 
 ## Sourcing and accuracy
 
 These references are distilled from the Clientexec plugin base classes and the plugins that ship with Clientexec:
 
-- `modules/admin/models/ServerPlugin.php`, `GatewayPlugin.php`, `PluginCallback.php`, `library/CE/NE_Plugin.php`, `modules/billing/models/class.gateway.plugin.php`, and the gateway dispatcher in `modules/billing/models/BillingGateway.php`
+- `modules/admin/models/ServerPlugin.php`, `GatewayPlugin.php`, `PluginCallback.php`, `library/CE/NE_Plugin.php`, `modules/billing/models/class.gateway.plugin.php`, the gateway dispatcher in `modules/billing/models/BillingGateway.php`, `RegistrarPlugin.php`, `DomainNameGateway.php`, `TopLevelDomainGateway.php`, `ProductspublicController.php`, and `ICanImportDomains.php`
 - Server examples: `cpanel` (full featured, reseller support, SSO, panels), `hestiacp` (clean minimal hosting panel), `linode` (VPS with custom power actions and per-package settings), `enhance` (client area panel), `opensrsemail` (legacy panel pattern)
 - Gateway examples: `mollie` (offsite plus webhook), `stripe` (onsite form plus stored payment methods), `stripecheckout` (hosted checkout), `offlinebanktransfer` (offline), `razorpay` (onsite order flow)
+- Registrar examples: `namesilo` (compact, current), `enom` (paged import), `openprovider` and `realtimeregister` (REST)

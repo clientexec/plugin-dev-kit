@@ -199,22 +199,13 @@ Throw `CE_Exception` if registration fails. Don't return error codes: the base c
 
 The `Renew` action, and also what core runs automatically after a renewal invoice is paid (when "Auto-Renew Domain" is on, the domain is inside the renewal window, and the registrar says the domain can be renewed). Use `buildRenewParams()`, which adds `tld`, `sld`, `NumYears`, and `package_addons`.
 
-### `canAutoRenewDomain(...)` (optional)
+### `canAutoRenewDomain($params)` (optional)
 
-If implemented, core calls it before an automatic renewal and only renews when it returns exactly `true`. Return `false` for statuses that need a manual renewal (redemption, pending delete, transferred away). If it throws, core logs it, skips the renewal, and opens a ticket. Without it, core only blocks renewal of domains that have already expired.
+If implemented, core calls it before an automatic renewal and only renews when it returns exactly `true`. Return `false` for statuses that need a manual renewal (redemption, pending delete, transferred away).
 
-> **Contract mismatch in current core.** `DomainNameGateway::domainStatusAllowsAutoRenewal()` calls `$plugin->canAutoRenewDomain($userPackage)` with the **`UserPackage` object**, while every shipped implementation treats its argument as a `$params` array (`$params['sld']`, `$params['Login']`). Until core and plugins agree, accept both:
->
-> ```php
-> public function canAutoRenewDomain($params): bool
-> {
->     if ($params instanceof UserPackage) {
->         $params = $this->buildRenewParams($params, ['userPackageId' => $params->getId()]);
->     }
->
->     // $params now has tld, sld and userPackageId; read settings with $this->getVariable()
-> }
-> ```
+It's called through `callPlugin()`, so `$params` has your settings plus `tld`, `sld`, and `userPackageId`, like the other direct calls. It doesn't get `NumYears` or registrant data.
+
+When it doesn't return `true`, the renewal is skipped and core opens a "manual renewal required" ticket. That includes throwing anything: a `CE_Exception`'s message is included in the ticket, and other exceptions are logged and treated as "not renewable". Without the method, core only blocks renewal of domains that have already expired.
 
 ### `doDomainTransferWithPopup($params)`, `initiateTransfer($params)`, `getTransferStatus($params)`
 
@@ -546,10 +537,6 @@ class PluginAcmereg extends RegistrarPlugin
 
     public function canAutoRenewDomain($params): bool
     {
-        if ($params instanceof UserPackage) {
-            $params = $this->buildRenewParams($params, ['userPackageId' => $params->getId()]);
-        }
-
         $domain = $this->api($params)->get('/domains/' . rawurlencode($this->domainName($params)));
 
         return in_array($domain['status'] ?? '', ['active', 'grace'], true);
@@ -1081,10 +1068,9 @@ Add `logo.png` and an empty `index.html`.
 
 1. **Errors:** replace returned `CE_Error` objects and `array(-1, 'message')` codes with thrown `CE_Exception`. Keep `MethodNotImplemented` for unsupported features.
 2. **Missing keys:** make `getGeneralInfo()` return `id`, `domain`, `is_registered`, and `is_expired`, and make `fetchDomains()` return paging metadata. PHP 8 warns on every undefined array key core reads.
-3. **`canAutoRenewDomain()`:** accept both a `UserPackage` and a `$params` array (section 6).
-4. **TLS:** remove `CURLOPT_SSL_VERIFYPEER => false` and set the Composer CA bundle.
-5. **Dead stubs:** delete empty `registerNS`, `editNS`, `deleteNS`, and `checkNSStatus`.
-6. **Style:** conventions, section 11.
+3. **TLS:** remove `CURLOPT_SSL_VERIFYPEER => false` and set the Composer CA bundle.
+4. **Dead stubs:** delete empty `registerNS`, `editNS`, `deleteNS`, and `checkNSStatus`.
+5. **Style:** conventions, section 11.
 
 ---
 

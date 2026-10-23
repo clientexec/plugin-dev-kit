@@ -83,21 +83,20 @@ public function getVariables()
 }
 ```
 
-### How a setting's stored key is built
+### How a setting's key is built
 
-Clientexec stores each setting as `plugin_<directory>_<setting name with spaces replaced by underscores>`. Other characters are kept as they are.
+Every setting is identified by `plugin_<directory>_<Setting Name>`. How that key reaches your code depends on the plugin type:
 
-| Plugin directory | Setting name | Key you read |
-| --- | --- | --- |
-| `hestiacp` | `Access Key` | `plugin_hestiacp_Access_Key` |
-| `cpanel` | `Failure E-mail` | `plugin_cpanel_Failure_E-mail` |
-| `linode` | `Prepend Package ID to Hostname` | `plugin_linode_Prepend_Package_ID_to_Hostname` |
+| Plugin type | How you read `Access Key` on plugin `acmepanel` |
+| --- | --- |
+| Server | `$args['server']['variables']['plugin_acmepanel_Access_Key']` (spaces become underscores; other characters are kept) |
+| Gateway | `$params['plugin_acmepay_Access Key']`, `$this->getVariable('Access Key')`, or in a callback `$this->settings->get('plugin_acmepay_Access Key')` (spaces are kept) |
 
 Because the key is derived from the setting name, renaming a setting orphans every value already saved under the old name. Treat setting names as permanent once released.
 
-Use plain string keys for setting names. Shipped plugins historically wrapped keys in `lang()`, but the key is part of the storage identifier, so it shouldn't depend on translation. Translate descriptions and visible values instead.
+Use plain, untranslated strings as setting names. Core builds storage keys from the array keys `getVariables()` returns (`NE_Plugin::getVariable()` looks settings up by key, and the gateway dispatcher iterates `array_keys()` of the variables to load values), so a key passed through `lang()` changes its storage identity whenever it gets translated. Shipped plugins historically wrapped keys in `lang()`; don't copy that. Translate descriptions and visible values instead.
 
-> **Note on `lang()` in getVariables():** everywhere else in plugin code, translate with `$this->user->lang()`. `getVariables()` is the one place every shipped plugin uses the global `lang()`. Follow the shipped pattern there until this kit says otherwise.
+> **Note on `lang()` in getVariables():** everywhere else in plugin code, translate with `$this->user->lang()`. `getVariables()` descriptions and values are the one place every shipped plugin uses the global `lang()`. Follow the shipped pattern there until this kit says otherwise.
 
 ### Field types
 
@@ -106,7 +105,7 @@ These are the `type` values in use across shipped plugins:
 | Type | Renders as | Notes |
 | --- | --- | --- |
 | `text` | single-line input | most common |
-| `password` | masked input | pair with `'encryptable' => true` |
+| `password` | masked input | in server plugins, pair with `'encryptable' => true` |
 | `textarea` | multi-line input | used for long tokens (cPanel API token, Hestia secret key) |
 | `yesno` | yes/no toggle | stored as `'1'` / `'0'` |
 | `check` | checkbox | common in nested per-package fields |
@@ -120,7 +119,7 @@ Other keys a setting can carry: `description` (help text, may contain simple HTM
 
 ### Secrets
 
-Mark every credential `'encryptable' => true`. Clientexec encrypts it at rest and hands it to your plugin already decrypted. If you need to store a secret yourself somewhere else (a custom field, your own table), encrypt it with `Clientexec::encryptString()` and decrypt with `Clientexec::decryptString()`. Never write a secret to a log or an error email: unset it from the array first (see section 5).
+In server plugins, mark every credential `'encryptable' => true`. Clientexec encrypts it at rest and hands it to your plugin already decrypted. Gateway plugins have their own rule; see the gateway reference. If you need to store a secret yourself somewhere else (a custom field, your own table), encrypt it with `Clientexec::encryptString()` and decrypt with `Clientexec::decryptString()`. Never write a secret to a log or an error email: unset it from the array first (see section 5).
 
 ## 4. Errors
 

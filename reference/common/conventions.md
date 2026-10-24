@@ -16,6 +16,7 @@ Every plugin is a directory under `plugins/<type>/`:
 | Fraud | `plugins/fraud/` | `FraudPlugin` | `modules/admin/models/FraudPlugin.php` |
 | Captcha | `plugins/captcha/` | `CaptchaPlugin` | `modules/admin/models/CaptchaPlugin.php` |
 | SSL | `plugins/ssl/` | `SSLPlugin` | `modules/admin/models/SSLPlugin.php` |
+| Two-factor authentication (2FA) | `plugins/twofactor/` | `TwoFactorPlugin` | `modules/admin/models/TwoFactorPlugin.php` |
 | Import / Export | `plugins/import/`, `plugins/export/` | `ImportPlugin`, `ExportPlugin` | `modules/admin/models/` |
 
 Naming is strict and derived from the directory name:

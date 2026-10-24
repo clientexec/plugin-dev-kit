@@ -14,7 +14,7 @@ public function onInvoicePaid($e): void
 }
 ```
 
-**Listeners run in every request handled by a Clientexec controller, including scheduled service runs (`cron.php` routes through one), but not REST API requests.** So events fired by services, such as `Ticket-Closed` from auto close and `Service-AutoSuspend-*`, reach snapins too.
+**Listeners run in every request handled by a Clientexec controller: admin, client area, REST API, and scheduled service runs (`cron.php` routes through a controller).** So events fired by the API and by services, such as `Client-Update` from the API, `Ticket-Closed` from auto close, and `Service-AutoSuspend-*`, reach snapins too.
 
 **Listeners run after the change has happened.** There are no "before" events, and a listener can't cancel or alter the action.
 
@@ -97,6 +97,7 @@ To react to a package changing state however it happened, prefer the `UserPackag
 
 | Event | Fired when | Data |
 | --- | --- | --- |
+| `System-ActionCalled` | Any request with an `action` parameter, before the action runs | `action` (the action name) |
 | `Service-CurrencyRateUpdate` | The currency converter service updates exchange rates | `currencies` (`code => rate`). Core reads the first listener's return value: return `[code => rate]` to override rates. |
 
 ---

@@ -351,8 +351,9 @@ public function onInvoicePaid($e): void
 The method receives a `Zend_EventManager_Event`. `$e->getParams()` returns the event's data; `$e->getTarget()` returns the object that fired it. Every event and its data is listed in `events.md`.
 
 **How listeners are registered:**
-- On every request handled by a Clientexec controller, listeners of every **enabled** snapin are attached. That includes scheduled service runs, since `cron.php` routes through a controller. REST API requests don't attach them.
-- The list of snapins with listeners is cached in the user's session. After enabling a snapin or adding a listener, save the snapin settings or start a new session before testing.
+- On every request handled by a Clientexec controller, listeners of every **enabled** snapin are attached: admin, client area, REST API, and scheduled service runs (`cron.php` routes through a controller).
+- For admin and client area requests, the list of snapins with listeners is cached in the user's session. After enabling a snapin or adding a listener, save the snapin settings or start a new session before testing. API requests build the list fresh each time.
+- A snapin whose class fails to load is logged and skipped, so check the Clientexec log if a listener never fires.
 - The snapin instance delivering an event is created without calling `init()`. Settings (`getVariable()`), `$this->user`, and `$this->db` work; mappings and anything else set up in `init()` don't.
 
 **Rules for listeners:**

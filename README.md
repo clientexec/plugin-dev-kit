@@ -39,4 +39,4 @@ clientexec-plugin-dev-kit/
 - **Snapins:** admin and client area pages, hook locations, admin and client area AJAX, access control, event listeners, the full event catalog, a complete example, and a WHMCS addon module and hooks porting guide.
 - **Shared conventions:** the rules every plugin type follows.
 
-Planned: service (cron) plugins, fraud, captcha, import/export, and an "updating older plugins" guide.
+Planned: service (cron) plugins, fraud, captcha, two-factor authentication (2FA), and import/export.
